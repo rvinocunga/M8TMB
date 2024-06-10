@@ -35,6 +35,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,6 +77,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
 
         //Manager
         this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        // Inicializar la RequestQueue
+        requestQueue = Volley.newRequestQueue(this);
+
+        // cargar datos
+        cargarDatosEstaciones();
 
         // Solicitar permisos
         if (ContextCompat.checkSelfPermission(this,
@@ -132,52 +139,58 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     }
 
 
-public void but_cargarDatos(View view) {
-    try {
-        String url = "https://opendata-ajuntament.barcelona.cat/data/dataset/bd2462df-6e1e-4e37-8205-a4b8e7313b84/resource/f60e9291-5aaa-417d-9b91-612a9de800aa/download";
-        JsonObjectRequest jsonObjectRequest =
-                new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+    private void cargarDatosEstaciones() {
+        String url = "https://api.tmb.cat/v1/transit/estacions?app_id=c1fb5d9f&app_key=16e6144e43916f5341ba81abdfe90912";
+
+        // Inicializar la lista elements
+        List<Estacion> elements = new ArrayList<>();
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            // limpia el visor
-                            visor.setText("");
+                            JSONArray stations = response.getJSONArray("features");
 
-                            JSONObject data = response.getJSONObject("data");
-                            JSONArray stations = data.getJSONArray("stations");
-
-                            // Mostrar los nombres de las estaciones
                             for (int i = 0; i < stations.length(); i++) {
                                 JSONObject station = stations.getJSONObject(i);
-                                String name = station.getString("name");
-                                visor.append(name + "\n");
-                            }
+                                JSONObject properties = station.getJSONObject("properties");
+                                JSONObject geometry = station.getJSONObject("geometry");
 
+                                String id = properties.getString("ID_ESTACIO");
+                                String name = properties.getString("NOM_ESTACIO");
+                                String address = "ADRECA";
+                                String lines = properties.getString("PICTO");
+                                JSONArray coordinates = geometry.getJSONArray("coordinates");
+                                double longitude = coordinates.getDouble(0);
+                                double latitude = coordinates.getDouble(1);
+
+                                Estacion estacion = new Estacion(id, name, latitude, longitude, address, lines);
+                                elements.add(estacion);
+
+                                // marcador estacion
+                                Marker marker = new Marker(mapa);
+                                marker.setPosition(new GeoPoint(latitude, longitude));
+                                marker.setTitle(name);
+                                String description = "<ul><li> LINEAS: "+ lines +"</li><li> Coordenadas: "+ coordinates +" </li></ul>";
+                                marker.setSubDescription(description);
+                                mapa.getOverlays().add(marker);
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            visor.setText("Error: JSONException");
+                            Toast.makeText(MainActivity.this, "Error: JSONException", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        visor.setText("Error: " + error.getMessage());
-                    }
-                }) {
-                    @Override
-                    public Map<String, String> getHeaders() {
-                        Map<String, String> headers = new HashMap<>();
-                        // Agregar tu token al encabezado
-                        headers.put("Authorization", "Bearer 182e680bf6c6f1eb864d25058f907bf8c07c974cd94422bd9d2827ec38c8d8af");
-                        return headers;
-                    }
-                };
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
         this.requestQueue.add(jsonObjectRequest);
-    } catch (Exception e) {
-        e.printStackTrace();
-        visor.setText("Error: " + e.getMessage());
     }
-}
+
+
     @Override
     public void onLocationChanged(@NonNull Location location) {
         this.longUsuari = location.getLongitude();
