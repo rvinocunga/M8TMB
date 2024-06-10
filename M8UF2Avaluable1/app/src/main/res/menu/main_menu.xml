@@ -16,7 +16,7 @@
     <item
         android:id="@+id/action_save"
         android:title="Lista"
-        android:icon="@drawable/baseline_checklist_24"
+        android:icon="@drawable/ic_station_black"
         app:showAsAction="ifRoom"
         />
 </menu>

@@ -58,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     // lista
     List<Estacion> elements;
 
+    // Marker del usuario
+    private Marker markerUsuario;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -78,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             // codi si tenim permís
-            this.iniciaLoacalitzacio();
+            this.iniciaLocalitzacio();
         } else {
             // en cas de no tenir, el demanem
             this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -101,20 +104,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     }
 
     private void creaMarcadorSimple() {
-        // Crear marcador Torre Agbar
-        Marker markerTorreAgbar = new Marker(this.mapa);
-        GeoPoint point = new GeoPoint(41.403333333333, 2.1894444444444);
-        markerTorreAgbar.setPosition(point);
-        markerTorreAgbar.setTitle("Edifici Agbar");
-        markerTorreAgbar.setSubDescription("<p>Situat a la Plaça de les Glòries Catalanes de Barcelona</p><ul><li> Av. Diagonal, 211 </li><li> Barcelona </li></ul>");
-        //markerTorreAgbar.setImage(this.getDrawable(R.drawable.torreagbar));
+        // Crear marcador usuari
+        markerUsuario = new Marker(this.mapa);
+        GeoPoint point = new GeoPoint(latUsuari, longUsuari);
+        markerUsuario.setPosition(point);
+        markerUsuario.setTitle("USUARIO");
 
-        //añadir marcador al mapa
-        this.mapa.getOverlays().add(markerTorreAgbar);
+        //markerUsuario.setImage(this.getDrawable(R.drawable.torreagbar));
+
+        // añadir marcador al mapa
+        this.mapa.getOverlays().add(markerUsuario);
     }
 
     @SuppressLint("MissingPermission")
-    private void iniciaLoacalitzacio() {
+    private void iniciaLocalitzacio() {
         this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000l, 0f, this);
     }
 
@@ -122,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            this.iniciaLoacalitzacio();
+            this.iniciaLocalitzacio();
         }else {
             Toast.makeText(this, "L'aplicació no pot funcionar sense aquest permís.", Toast.LENGTH_LONG).show();
         }
@@ -179,6 +182,12 @@ public void but_cargarDatos(View view) {
     public void onLocationChanged(@NonNull Location location) {
         this.longUsuari = location.getLongitude();
         this.latUsuari = location.getLatitude();
+
+        // Actualizar la posición del marcador del usuario
+        if (markerUsuario != null) {
+            markerUsuario.setPosition(new GeoPoint(latUsuari, longUsuari));
+            this.mapa.invalidate(); // Refrescar el mapa
+        }
     }
     public void centrarUsuari(View view) {
         this.mapController.animateTo(new GeoPoint(latUsuari, longUsuari));
