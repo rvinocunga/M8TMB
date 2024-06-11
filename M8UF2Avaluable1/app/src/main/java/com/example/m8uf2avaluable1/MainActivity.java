@@ -197,6 +197,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    private double calcularDistancia(double latEstacion, double lonEstacion) {
+        Location estacionLocation = new Location("Estacion");
+        estacionLocation.setLatitude(latEstacion);
+        estacionLocation.setLongitude(lonEstacion);
+
+        Location usuarioLocation = new Location("Usuario");
+        usuarioLocation.setLatitude(latUsuari);
+        usuarioLocation.setLongitude(longUsuari);
+
+        // Calcular la distancia entre la estación y el dispositivo
+        return usuarioLocation.distanceTo(estacionLocation);
+    }
+
 
     private void cargarDatosEstaciones() {
 
