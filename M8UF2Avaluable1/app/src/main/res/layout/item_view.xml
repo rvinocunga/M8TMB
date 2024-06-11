@@ -57,20 +57,18 @@
                     android:layout_height="wrap_content"
                     android:text="Coordenadas"
                     android:textSize="15sp"/>
+
+                <TextView
+                    android:id="@+id/lineasTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="130dp"
+                    android:layout_marginRight="130dp"
+                    android:text="Lineas"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/lineasTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="6dp"
-                android:layout_marginRight="6dp"
-                android:text="Lineas"
-                android:textSize="15sp"
-                android:textStyle="bold" />
         </RelativeLayout>
     </LinearLayout>
 

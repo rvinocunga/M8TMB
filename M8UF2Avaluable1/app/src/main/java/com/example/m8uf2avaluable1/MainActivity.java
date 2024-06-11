@@ -38,7 +38,9 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
     private MapView mapa;
@@ -60,6 +62,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     //Variables para el RecyclerView
     private RecyclerView recyclerViewEstaciones;
     private EstacionAdapter estacionAdapter;
+    private static final Map<String, String> coloresLineas = new HashMap<>();
+
+    static {
+        // Inicializar el diccionario de colores para cada línea
+        coloresLineas.put("L1", "#FF0000"); // rojo
+        coloresLineas.put("L2", "#7D2181"); // morado
+        coloresLineas.put("L3", "#00FF00"); // verde
+        coloresLineas.put("L4", "#FFFF00"); // amarillo
+        coloresLineas.put("L5", "#0000FF"); // azul
+        coloresLineas.put("L9N", "#FFA500"); // naranja
+        coloresLineas.put("L9S", "#FFA500"); // naranja
+        coloresLineas.put("L10N", "#B2FFFF"); // celeste
+        coloresLineas.put("L10S", "#B2FFFF"); // celeste
+        coloresLineas.put("L11", "#00FF00"); // lima
+        coloresLineas.put("FM", "#00FF00"); // verde
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         // Inicializar el RecyclerView y el adaptador
         recyclerViewEstaciones = findViewById(R.id.recycler);
         recyclerViewEstaciones.setLayoutManager(new LinearLayoutManager(this));
-        estacionAdapter = new EstacionAdapter(this,estaciones);
+        estacionAdapter = new EstacionAdapter(this,estaciones, coloresLineas);
         recyclerViewEstaciones.setAdapter(estacionAdapter);
         listaIcon.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -181,6 +199,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     private void cargarDatosEstaciones() {
+
+
         String url = "https://api.tmb.cat/v1/transit/estacions?app_id=c1fb5d9f&app_key=16e6144e43916f5341ba81abdfe90912";
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
@@ -198,9 +218,26 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         String name = properties.getString("NOM_ESTACIO");
                         String address = "ADRECA";
                         String lines = properties.getString("PICTO");
+                        String[] lineasSeparadas = lines.split("L");
+
                         JSONArray coordinates = geometry.getJSONArray("coordinates");
                         double longitude = coordinates.getDouble(0);
                         double latitude = coordinates.getDouble(1);
+
+                        // Construir la lista de líneas con colores
+                        StringBuilder lineasColoreadas = new StringBuilder();
+                        for (int j = 1; j < lineasSeparadas.length; j++) {
+                            String linea = "L" + lineasSeparadas[j];
+                            String color = coloresLineas.get(linea);
+                            if (color != null) {
+                                lineasColoreadas.append("<font color='").append(color).append("'>").append(linea).append("</font>");
+                            } else {
+                                lineasColoreadas.append(linea);
+                            }
+                            if (j < lineasSeparadas.length - 1) {
+                                lineasColoreadas.append(", ");
+                            }
+                        }
 
                         Estacion estacion = new Estacion(id, name, String.valueOf(latitude), String.valueOf(longitude), address, lines);
                         estaciones.add(estacion);
@@ -209,9 +246,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         Marker marker = new Marker(mapa);
                         marker.setPosition(new GeoPoint(latitude, longitude));
                         marker.setTitle(name);
-                        String description = "<ul><li> LINEAS: " + lines + "</li><li> Coordenadas: " + coordinates + " </li></ul>";
+                        String description = "<ul><li>LINEAS: " + lineasColoreadas + "</li><li>Coordenadas: " + coordinates + " </li></ul>";
                         marker.setSubDescription(description);
                         mapa.getOverlays().add(marker);
+
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -226,6 +264,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         });
         this.requestQueue.add(jsonObjectRequest);
     }
+
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
