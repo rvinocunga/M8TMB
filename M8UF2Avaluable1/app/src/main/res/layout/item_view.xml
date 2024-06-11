@@ -28,7 +28,7 @@
                 android:layout_gravity="center"
                 android:paddingLeft="14dp"
                 android:paddingRight="14dp"
-                app:srcCompat="@drawable/ic_station_black"
+                app:srcCompat="@drawable/baseline_commute_24"
                 android:layout_alignParentLeft="true"/>
             <LinearLayout
                 android:id="@+id/linearLayout"
@@ -41,35 +41,36 @@
                 android:orientation="vertical"
                 android:layout_marginLeft="4dp"
                 android:layout_toRightOf="@+id/iconImageView">
+
                 <TextView
-                    android:id="@+id/nameTextView"
+                    android:id="@+id/nombreEstacionTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="2dp"
-                    android:text="Estació Roger"
+                    android:text="Nombre estacion"
                     android:textColor="@android:color/black"
-                    android:textSize="20sp"
-                    android:textStyle="bold"/>
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
                 <TextView
-                    android:id="@+id/addressTextView"
+                    android:id="@+id/coordenadasTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Roger de Flor"
+                    android:text="Coordenadas"
                     android:textSize="15sp"/>
             </LinearLayout>
 
             <TextView
-                android:id="@+id/statusTextView"
+                android:id="@+id/lineasTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
                 android:layout_marginEnd="6dp"
                 android:layout_marginRight="6dp"
-                android:text="Actiu"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true"/>
+                android:text="Lineas"
+                android:textSize="15sp"
+                android:textStyle="bold" />
         </RelativeLayout>
     </LinearLayout>
 

@@ -1,11 +1,5 @@
 package com.example.m8uf2avaluable1;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -17,8 +11,22 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,22 +37,10 @@ import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements LocationListener{
+public class MainActivity extends AppCompatActivity implements LocationListener {
     private MapView mapa;
     private MapController mapController;
     private Context contexto;
@@ -57,20 +53,66 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     private TextView visor;
 
     // lista
-    List<Estacion> elements;
+    List<Estacion> estaciones = new ArrayList<>();
 
     // Marker del usuario
     private Marker markerUsuario;
+    //Variables para el RecyclerView
+    private RecyclerView recyclerViewEstaciones;
+    private EstacionAdapter estacionAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         this.contexto = this.getApplicationContext();
         Configuration.getInstance().load(contexto, PreferenceManager.getDefaultSharedPreferences(contexto));
 
-        setContentView(R.layout.activity_main);
+        //toolbar
+        ImageView mapIcon = findViewById(R.id.toolbar_mapa_icon);
+        ImageView listaIcon = findViewById(R.id.toolbar_lista_icon);
+        TextView text = findViewById(R.id.toolbar_text);
+
+        // Inicializar el RecyclerView y el adaptador
+        recyclerViewEstaciones = findViewById(R.id.recycler);
+        recyclerViewEstaciones.setLayoutManager(new LinearLayoutManager(this));
+        estacionAdapter = new EstacionAdapter(this,estaciones);
+        recyclerViewEstaciones.setAdapter(estacionAdapter);
+        listaIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Cargando lista...", Toast.LENGTH_SHORT).show();
+                // Mostrar el RecyclerView y ocultar el mapa si es visible
+                if (recyclerViewEstaciones.getVisibility() == View.GONE) {
+                    recyclerViewEstaciones.setVisibility(View.VISIBLE);
+                    // Ocultar el mapa si es visible
+                    mapa = findViewById(R.id.mapa);
+                    if (mapa != null && mapa.getVisibility() == View.VISIBLE) {
+                        mapa.setVisibility(View.GONE);
+                    }
+                } else {
+                    recyclerViewEstaciones.setVisibility(View.GONE);
+                }
+            }
+        });
+
+
+        mapIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Mostrar un mensaje indicando que se ha hecho clic en el mapa
+                Toast.makeText(MainActivity.this, "Click en el mapa...", Toast.LENGTH_SHORT).show();
+
+                // Mostrar el mapa y ocultar el RecyclerView si está visible
+                if (mapa.getVisibility() == View.GONE) {
+                    mapa.setVisibility(View.VISIBLE);
+                    recyclerViewEstaciones.setVisibility(View.GONE);
+                }
+            }
+        });
+
 
         this.mapa = this.findViewById(R.id.mapa);
         this.mapController = (MapController) this.mapa.getController();
@@ -85,8 +127,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
         cargarDatosEstaciones();
 
         // Solicitar permisos
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             // codi si tenim permís
             this.iniciaLocalitzacio();
         } else {
@@ -106,8 +147,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_item, menu);
+        return true;
     }
 
     private void creaMarcadorSimple() {
@@ -125,15 +166,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
 
     @SuppressLint("MissingPermission")
     private void iniciaLocalitzacio() {
-        this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000l, 0f, this);
+        this.locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000l, 0f, this);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             this.iniciaLocalitzacio();
-        }else {
+        } else {
             Toast.makeText(this, "L'aplicació no pot funcionar sense aquest permís.", Toast.LENGTH_LONG).show();
         }
     }
@@ -142,46 +183,42 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     private void cargarDatosEstaciones() {
         String url = "https://api.tmb.cat/v1/transit/estacions?app_id=c1fb5d9f&app_key=16e6144e43916f5341ba81abdfe90912";
 
-        // Inicializar la lista elements
-        List<Estacion> elements = new ArrayList<>();
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray stations = response.getJSONArray("features");
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            JSONArray stations = response.getJSONArray("features");
+                    for (int i = 0; i < stations.length(); i++) {
+                        JSONObject station = stations.getJSONObject(i);
+                        JSONObject properties = station.getJSONObject("properties");
+                        JSONObject geometry = station.getJSONObject("geometry");
 
-                            for (int i = 0; i < stations.length(); i++) {
-                                JSONObject station = stations.getJSONObject(i);
-                                JSONObject properties = station.getJSONObject("properties");
-                                JSONObject geometry = station.getJSONObject("geometry");
+                        String id = properties.getString("ID_ESTACIO");
+                        String name = properties.getString("NOM_ESTACIO");
+                        String address = "ADRECA";
+                        String lines = properties.getString("PICTO");
+                        JSONArray coordinates = geometry.getJSONArray("coordinates");
+                        double longitude = coordinates.getDouble(0);
+                        double latitude = coordinates.getDouble(1);
 
-                                String id = properties.getString("ID_ESTACIO");
-                                String name = properties.getString("NOM_ESTACIO");
-                                String address = "ADRECA";
-                                String lines = properties.getString("PICTO");
-                                JSONArray coordinates = geometry.getJSONArray("coordinates");
-                                double longitude = coordinates.getDouble(0);
-                                double latitude = coordinates.getDouble(1);
+                        Estacion estacion = new Estacion(id, name, String.valueOf(latitude), String.valueOf(longitude), address, lines);
+                        estaciones.add(estacion);
 
-                                Estacion estacion = new Estacion(id, name, latitude, longitude, address, lines);
-                                elements.add(estacion);
-
-                                // marcador estacion
-                                Marker marker = new Marker(mapa);
-                                marker.setPosition(new GeoPoint(latitude, longitude));
-                                marker.setTitle(name);
-                                String description = "<ul><li> LINEAS: "+ lines +"</li><li> Coordenadas: "+ coordinates +" </li></ul>";
-                                marker.setSubDescription(description);
-                                mapa.getOverlays().add(marker);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Toast.makeText(MainActivity.this, "Error: JSONException", Toast.LENGTH_SHORT).show();
-                        }
+                        // marcador estacion
+                        Marker marker = new Marker(mapa);
+                        marker.setPosition(new GeoPoint(latitude, longitude));
+                        marker.setTitle(name);
+                        String description = "<ul><li> LINEAS: " + lines + "</li><li> Coordenadas: " + coordinates + " </li></ul>";
+                        marker.setSubDescription(description);
+                        mapa.getOverlays().add(marker);
                     }
-                }, new Response.ErrorListener() {
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this, "Error: JSONException", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Toast.makeText(MainActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
@@ -189,7 +226,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
         });
         this.requestQueue.add(jsonObjectRequest);
     }
-
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
@@ -202,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
             this.mapa.invalidate(); // Refrescar el mapa
         }
     }
+
     public void centrarUsuari(View view) {
         this.mapController.animateTo(new GeoPoint(latUsuari, longUsuari));
     }
