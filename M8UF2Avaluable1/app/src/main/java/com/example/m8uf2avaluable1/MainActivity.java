@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static final Map<String, String> coloresLineas = new HashMap<>();
 
     static {
-        // Inicializar el diccionario de colores para cada línea
+        // colores lineas
         coloresLineas.put("L1", "#FF0000"); // rojo
         coloresLineas.put("L2", "#7D2181"); // morado
         coloresLineas.put("L3", "#00FF00"); // verde
@@ -174,6 +174,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         markerUsuario = new Marker(this.mapa);
         GeoPoint point = new GeoPoint(latUsuari, longUsuari);
         markerUsuario.setPosition(point);
+        markerUsuario.setTextIcon("--> Estás aquí <--");
+        // se ve mal igual que con el marker de las estaciones
+        //markerUsuario.setIcon(this.getDrawable(R.drawable.usuario));
         markerUsuario.setTitle("USUARIO");
 
         //markerUsuario.setImage(this.getDrawable(R.drawable.torreagbar));
@@ -197,22 +200,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
-    private double calcularDistancia(double latEstacion, double lonEstacion) {
-        Location estacionLocation = new Location("Estacion");
-        estacionLocation.setLatitude(latEstacion);
-        estacionLocation.setLongitude(lonEstacion);
-
-        Location usuarioLocation = new Location("Usuario");
-        usuarioLocation.setLatitude(latUsuari);
-        usuarioLocation.setLongitude(longUsuari);
-
-        // Calcular la distancia entre la estación y el dispositivo
-        return usuarioLocation.distanceTo(estacionLocation);
-    }
-
-
     private void cargarDatosEstaciones() {
-
 
         String url = "https://api.tmb.cat/v1/transit/estacions?app_id=c1fb5d9f&app_key=16e6144e43916f5341ba81abdfe90912";
 
